@@ -1,0 +1,5 @@
+.idea/*
+logs/*
+mifi-api.iml
+target/*
+.DS_Store
