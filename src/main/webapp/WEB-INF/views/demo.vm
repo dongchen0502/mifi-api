@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>测试页面</title>
+</head>
+<body>
+董琛你好
+<h3>余额查询</h3>
+<form action="/yue">
+    <label>查询号码:<input type="text" name="mobile"/></label>
+    <label>查询类型:</label>
+    <select name="queryType">
+        <option value="0">按照账户查</option>
+        <option value="1">按照用户查</option>
+    </select>
+    <input type="submit" value="提交"/>
+</form>
+<h3>套餐查询</h3>
+<form action="/taocan">
+    <label>查询号码:<input type="text" name="mobile"/></label>
+    <label>查询类型:<input type="month" name="month"/></label>
+    <input type="submit" value="提交"/>
+</form>
+<h3>交费查询</h3>
+<form action="/chargeInfo">
+    <label>查询号码:<input type="text" name="mobile"/></label>
+    <label>查询类型:<input type="month" name="month"/></label>
+    <input type="submit" value="提交"/>
+</form>
+</body>
+</html>

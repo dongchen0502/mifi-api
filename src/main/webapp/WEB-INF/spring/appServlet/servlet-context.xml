@@ -1,0 +1,160 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:util="http://www.springframework.org/schema/util"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xsi:schemaLocation="
+		http://www.springframework.org/schema/util
+		http://www.springframework.org/schema/util/spring-util-3.0.xsd
+	    http://www.springframework.org/schema/beans
+	    http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
+	    http://www.springframework.org/schema/context
+	    http://www.springframework.org/schema/context/spring-context-3.1.xsd
+	    http://www.springframework.org/schema/mvc
+	    http://www.springframework.org/schema/mvc/spring-mvc-3.1.xsd"
+       default-autowire="byName">
+
+
+    <mvc:annotation-driven>
+        <mvc:message-converters register-defaults="true">
+            <bean class="org.springframework.http.converter.StringHttpMessageConverter">
+                <property name="supportedMediaTypes" value = "text/plain;charset=UTF-8" />
+            </bean>
+        </mvc:message-converters>
+    </mvc:annotation-driven>
+
+    <!--<bean class="org.springframework.web.servlet.view.XmlViewResolver">-->
+        <!--<property name="location">-->
+            <!--<value>/WEB-INF/spring/appServlet/spring-excel-views.xml</value>-->
+        <!--</property>-->
+        <!--<property name="order" value="0" />-->
+    <!--</bean>-->
+
+    <bean class="org.springframework.web.servlet.mvc.annotation.AnnotationMethodHandlerAdapter">
+        <property name="messageConverters">
+            <array>
+                <bean class="org.springframework.http.converter.StringHttpMessageConverter">
+                    <property name="supportedMediaTypes" value="text/plain;charset=UTF-8"/>
+                </bean>
+            </array>
+        </property>
+    </bean>
+
+    <bean id="utf8charset" class="sun.nio.cs.UTF_8"></bean>
+    <!--<mvc:interceptors>-->
+        <!--&lt;!&ndash; 多个拦截器,顺序执行 &ndash;&gt;-->
+
+        <!--<mvc:interceptor>-->
+            <!--<mvc:mapping path="/examStat/**"/>-->
+            <!--<bean class="com.iyunxiao.statistics.interceptor.UserLoginInterceptor">-->
+                <!--<property name="excludedUrls">-->
+                    <!--<list>-->
+                        <!--<value>/examStat/start</value>-->
+                        <!--<value>/examStat/login</value>-->
+                        <!--<value>/examStat/admin/login</value>-->
+                    <!--</list>-->
+                <!--</property>-->
+            <!--</bean>-->
+        <!--</mvc:interceptor>-->
+        <!--<mvc:interceptor>-->
+            <!--<mvc:mapping path="/examStat/**"/>-->
+            <!--<bean class="com.iyunxiao.statistics.interceptor.CSRFTokenInterceptor">-->
+            <!--</bean>-->
+        <!--</mvc:interceptor>-->
+                <!--<mvc:interceptor>-->
+            <!--<mvc:mapping path="/examStat/**"/>-->
+            <!--<bean class="com.iyunxiao.statistics.interceptor.PrivilegeControlInterceptor">-->
+            <!--</bean>-->
+        <!--</mvc:interceptor>-->
+            <!--</mvc:interceptors>-->
+
+    <!--<context:component-scan base-package="com.iyunxiao.statistics.controllers">-->
+        <!--<context:include-filter type="annotation"-->
+                                <!--expression="org.springframework.stereotype.Service"/>-->
+    <!--</context:component-scan>-->
+
+    <!--<context:component-scan base-package="com.iyunxiao.statistics.service">-->
+        <!--<context:include-filter type="annotation"-->
+                                <!--expression="org.springframework.stereotype.Service"/>-->
+    <!--</context:component-scan>-->
+    <!--<context:component-scan base-package="com.iyunxiao.statistics.dao">-->
+        <!--<context:include-filter type="annotation"-->
+                                <!--expression="org.springframework.stereotype.Service"/>-->
+    <!--</context:component-scan>-->
+
+    <context:annotation-config/>
+
+     <!--static resources-->
+    <!--<mvc:resources location="/static/" mapping="/static/**" cache-period="864000"/>-->
+    <!--<mvc:resources location="/static/appView/bi_analysis/src/" mapping="/examStat/**" cache-period="864000"/>-->
+    <!-- 24*3600*10 -->
+
+     <!--template view -->
+    <bean id="viewResolver"
+          class="org.springframework.web.servlet.view.velocity.VelocityViewResolver">
+        <property name="cache" value="true"/>
+        <property name="prefix" value=""/>
+        <property name="suffix" value=".vm"/>
+        <property name="requestContextAttribute" value="rc"/>
+        <property name="contentType">
+            <value>text/html;charset=UTF-8</value>
+        </property>
+    </bean>
+    <bean id="velocityConfigurer"
+          class="org.springframework.web.servlet.view.velocity.VelocityConfigurer">
+        <property name="resourceLoaderPath" value="/WEB-INF/views/"/>
+        <property name="velocityProperties">
+            <props>
+                <prop key="input.encoding">utf-8</prop>
+                <prop key="output.encoding">utf-8</prop>
+            </props>
+        </property>
+    </bean>
+
+    <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+        <property name="prefix" value="/static/"/>
+        <property name="suffix" value=".html"/>
+    </bean>
+
+    <!--<bean id="velocityConfigurer"-->
+          <!--class="org.springframework.web.servlet.view.velocity.VelocityConfigurer">-->
+        <!--<property name="resourceLoaderPath" value="/WEB-INF/views/"/>-->
+        <!--<property name="velocityProperties">-->
+            <!--<props>-->
+                <!--<prop key="input.encoding">utf-8</prop>-->
+                <!--<prop key="output.encoding">utf-8</prop>-->
+            <!--</props>-->
+        <!--</property>-->
+    <!--</bean>-->
+
+    <bean id="multipartResolver"
+          class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+        <property name="maxUploadSize" value="10000000000"/>
+    </bean>
+
+    <!--<bean class="org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter">-->
+    <!--<property name="messageConverters">-->
+    <!--<util:list id="beanList">-->
+    <!--<ref bean="stringHttpMessageConverter"/>-->
+    <!--</util:list>-->
+    <!--</property>-->
+    <!--</bean>-->
+
+    <!--<bean id="stringHttpMessageConverter"-->
+    <!--class="org.springframework.http.converter.StringHttpMessageConverter">-->
+    <!--<property name="supportedMediaTypes">-->
+    <!--<list>-->
+    <!--<bean class="org.springframework.http.MediaType">-->
+    <!--<constructor-arg value="application"/>-->
+    <!--<constructor-arg value="json"/>-->
+    <!--<constructor-arg value="UTF-8"/>-->
+    <!--</bean>-->
+    <!--</list>-->
+    <!--</property>-->
+    <!--</bean>-->
+
+    <import resource="controllers.xml"/>
+    <!--<import resource="rabbitmq.xml"/>-->
+    <!--<import resource="time-task.xml"/>-->
+</beans>
