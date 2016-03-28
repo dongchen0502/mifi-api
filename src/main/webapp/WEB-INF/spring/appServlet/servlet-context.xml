@@ -69,10 +69,10 @@
         <!--</mvc:interceptor>-->
             <!--</mvc:interceptors>-->
 
-    <!--<context:component-scan base-package="com.iyunxiao.statistics.controllers">-->
-        <!--<context:include-filter type="annotation"-->
-                                <!--expression="org.springframework.stereotype.Service"/>-->
-    <!--</context:component-scan>-->
+    <context:component-scan base-package="com.hxtx.service">
+        <context:include-filter type="annotation"
+                                expression="org.springframework.stereotype.Service"/>
+    </context:component-scan>
 
     <!--<context:component-scan base-package="com.iyunxiao.statistics.service">-->
         <!--<context:include-filter type="annotation"-->
@@ -85,10 +85,8 @@
 
     <context:annotation-config/>
 
-     <!--static resources-->
-    <!--<mvc:resources location="/static/" mapping="/static/**" cache-period="864000"/>-->
-    <!--<mvc:resources location="/static/appView/bi_analysis/src/" mapping="/examStat/**" cache-period="864000"/>-->
-    <!-- 24*3600*10 -->
+    <!-- static resources -->
+    <mvc:resources location="/static/" mapping="/static/**" cache-period="864000"/>
 
      <!--template view -->
     <bean id="viewResolver"
