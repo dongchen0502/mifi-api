@@ -18,6 +18,7 @@ define(['ViewBase', 'jquery', 'lodash', 'ajaxUtil'], function (ViewBase, $, _, a
         },
 
         update: function () {
+            
         },
 
         render: function () {
