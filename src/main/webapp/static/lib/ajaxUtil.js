@@ -45,7 +45,7 @@ define(['jquery', 'lodash'], function ($, _) {
                         }
 
                         case 520:{
-                            alert(result.data);
+                            alert(result.msg);
                             return;
                         }
                     }
@@ -188,7 +188,7 @@ define(['jquery', 'lodash'], function ($, _) {
             ajaxUtil.ajax({
 
                 url: _this.parserUrl(url, urlParams),
-                dataType: "jsonp",
+                dataType: "json",
                 async: true,
                 data: data,
                 method: method || 'get',

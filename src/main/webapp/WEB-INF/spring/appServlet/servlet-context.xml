@@ -18,9 +18,9 @@
 
     <mvc:annotation-driven>
         <mvc:message-converters register-defaults="true">
-            <bean class="org.springframework.http.converter.StringHttpMessageConverter">
-                <property name="supportedMediaTypes" value = "text/plain;charset=UTF-8" />
-            </bean>
+                <bean class="org.springframework.http.converter.StringHttpMessageConverter">
+                    <property name="supportedMediaTypes" value = "text/plain;charset=UTF-8" />
+                </bean>
         </mvc:message-converters>
     </mvc:annotation-driven>
 
@@ -30,7 +30,6 @@
         <!--</property>-->
         <!--<property name="order" value="0" />-->
     <!--</bean>-->
-
     <bean class="org.springframework.web.servlet.mvc.annotation.AnnotationMethodHandlerAdapter">
         <property name="messageConverters">
             <array>
@@ -41,7 +40,7 @@
         </property>
     </bean>
 
-    <bean id="utf8charset" class="sun.nio.cs.UTF_8"></bean>
+    <bean id="utf8charset" class="sun.nio.cs.UTF_8"/>
     <!--<mvc:interceptors>-->
         <!--&lt;!&ndash; 多个拦截器,顺序执行 &ndash;&gt;-->
 

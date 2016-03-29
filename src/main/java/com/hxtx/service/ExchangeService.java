@@ -12,6 +12,8 @@ import org.springframework.stereotype.Service;
 
 import java.rmi.RemoteException;
 import java.text.SimpleDateFormat;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * 和网关实际交户的业务逻辑
@@ -52,6 +54,42 @@ public class ExchangeService {
     }
 
     /**
+     * 构建交换数据的xml格式
+     * @param busCode
+     * @param SvcCode
+     * @param svcContentMap
+     * @return
+     */
+    private String buildExchangeXML(String busCode, String SvcCode, Map<String, String> svcContentMap){
+        Document document = DocumentHelper.createDocument();
+        document.setXMLEncoding("UTF-8");
+        //生成根节点
+        Element root = document.addElement("ContractRoot");
+        //tcpCont节点内容
+        Element tcpCont = root.addElement("TcpCont");
+        tcpCont.addElement("TransactionID").addText(this.getTransId());
+        tcpCont.addElement("ActionCode").addText("0");
+        tcpCont.addElement("BusCode").addText(busCode);
+        tcpCont.addElement("ServiceCode").addText(SvcCode);
+        tcpCont.addElement("ServiceContractVer").addText("SVC1100120110501");
+        tcpCont.addElement("ServiceLevel").addText("1");
+        tcpCont.addElement("SrcOrgID").addText(SrcOrgID);
+        tcpCont.addElement("SrcSysID").addText(SrcSysID);
+        tcpCont.addElement("SrcSysSign").addText("integral10000000830803");
+        tcpCont.addElement("DstOrgID").addText(DstOrgID);
+        tcpCont.addElement("DstSysID").addText(DstSysID);
+        tcpCont.addElement("ReqTime").addText(sdf2.format(System.currentTimeMillis()));
+
+        //svcCont节点内容
+        Element svcCont = root.addElement("SvcCont");
+        for(String nodeName : svcContentMap.keySet()){
+            svcCont.addElement(nodeName).addText(svcContentMap.get(nodeName));
+        }
+
+        return document.asXML();
+    }
+
+    /**
      * 查询账户余额
      * @param mobile
      * @param queryType
@@ -60,30 +98,69 @@ public class ExchangeService {
     public String balance(String mobile, int queryType) {
         String result = "";
 
-        Document document = DocumentHelper.createDocument();
-        document.setXMLEncoding("UTF-8");
-        //生成根节点
-        Element root = document.addElement("ContractRoot");
-        //tcpCont节点内容
-        Element tcpCont = root.addElement("TcpCont");
-        tcpCont.addElement("TransactionID").setData(this.getTransId());
-        tcpCont.addElement("ActionCode").setData(0);
-        tcpCont.addElement("BusCode").setData("BUS81000");
-        tcpCont.addElement("ServiceCode").setData("SVC81001");
-        tcpCont.addElement("ServiceContractVer").setData("SVC1100120110501");
-        tcpCont.addElement("ServiceLevel").setData("1");
-        tcpCont.addElement("SrcOrgID").setData(SrcOrgID);
-        tcpCont.addElement("SrcSysID").setData(SrcSysID);
-        tcpCont.addElement("SrcSysSign").setData("integral10000000830803");
-        tcpCont.addElement("DstOrgID").setData(DstOrgID);
-        tcpCont.addElement("DstSysID").setData(DstSysID);
-        tcpCont.addElement("ReqTime").setData(sdf2.format(System.currentTimeMillis()));
+        Map<String, String> params = new HashMap<String, String>();
+        params.put("CustMobile", mobile);
+        params.put("QueryType", String.valueOf(queryType));
 
-        //svcCont节点内容
-        Element svcCont = root.addElement("SvcCont");
-        svcCont.addElement("CustMobile").setData(mobile);
-        svcCont.addElement("QueryType").setData(queryType);
-        exchange.setIn0(document.getStringValue());
+        String exchangeXML = this.buildExchangeXML("BUS81000", "SVC81001", params);
+
+        exchange.setIn0(exchangeXML);
+
+        try {
+            //阻塞操作, 将来改进为线程池
+            ExchangeResponse response = service.exchange(exchange);
+            result = response.getOut();
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
+
+        return result;
+    }
+
+    /**
+     * 查询流量套餐
+     * @param mobile
+     * @param month
+     * @return
+     */
+    public String flowSet(String mobile, String month) {
+        String result = "";
+
+        Map<String, String> params = new HashMap<String, String>();
+        params.put("CustMobile", mobile);
+        params.put("Month", month);
+
+        String exchangeXML = this.buildExchangeXML("BUS81000", "SVC81003", params);
+
+        exchange.setIn0(exchangeXML);
+
+        try {
+            //阻塞操作, 将来改进为线程池
+            ExchangeResponse response = service.exchange(exchange);
+            result = response.getOut();
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
+
+        return result;
+    }
+
+    /**
+     * 查询交费历史
+     * @param mobile
+     * @param month
+     * @return
+     */
+    public String chargeInfo(String mobile, String month){
+        String result = "";
+
+        Map<String, String> params = new HashMap<String, String>();
+        params.put("CustMobile", mobile);
+        params.put("Month", month);
+
+        String exchangeXML = this.buildExchangeXML("BUS81000", "SVC81006", params);
+
+        exchange.setIn0(exchangeXML);
 
         try {
             //阻塞操作, 将来改进为线程池
