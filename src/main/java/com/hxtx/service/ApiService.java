@@ -1,11 +1,7 @@
 package com.hxtx.service;
 
-import com.hxtx.entity.Balance;
-import com.hxtx.entity.FlowSet;
-import com.hxtx.entity.PaymentRecordInfo;
-import com.hxtx.entity.SubAccuInfo;
+import com.hxtx.entity.*;
 import com.hxtx.exception.ApiException;
-import org.apache.axis2.context.externalize.ActivateUtils;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.DocumentHelper;
@@ -14,9 +10,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
+import java.util.concurrent.*;
 
 /**
  * 实现api服务的具体业务逻辑
@@ -26,6 +21,7 @@ import java.util.List;
 public class ApiService {
 
     private final String SuccCode = "0000";
+    private final ExecutorService fixedThreadPool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 
     @Autowired
     ExchangeService exchange;
@@ -151,6 +147,13 @@ public class ApiService {
         return result;
     }
 
+    /**
+     * 查询手机充值记录
+     *
+     * @param mobile 手机号
+     * @param month 查询月份
+     * @return PaymentRecordInfo
+     */
     public List<PaymentRecordInfo> queryChargeInfo(String mobile, String month) {
         List<PaymentRecordInfo> result = new ArrayList<PaymentRecordInfo>();
 
@@ -199,5 +202,85 @@ public class ApiService {
         }
         return result;
 
+    }
+
+    /**
+     *批量查询手机流量套餐
+     *
+     * @param mobiles
+     * @param month
+     * @return
+     */
+    public Map<String, FlowSetProfile> batchQueryFlowSet(String mobiles, String month) {
+        if(mobiles == null){
+            throw new ApiException("批量查询错误 : 参数 mobiles = null");
+        }
+        if(month == null){
+            throw new ApiException("批量查询错误 : 参数 month = null");
+        }
+
+        String[] mobileArr = mobiles.split(",");
+        month = month.replace("-", "");
+        Map<String, FlowSetProfile> finalResult = new HashMap<String, FlowSetProfile>(mobileArr.length);
+
+        CompletionService<FlowSetProfile> completionService = new ExecutorCompletionService<FlowSetProfile>(fixedThreadPool);
+        for(String mobile : mobileArr){
+            completionService.submit(queryTask(mobile, month));
+        }
+
+        try {
+
+            for (int i = 0; i < mobileArr.length; i++) {
+                Future<FlowSetProfile> f =  completionService.take();
+                FlowSetProfile value = f.get();
+
+                FlowSetProfile fsp = new FlowSetProfile();
+                finalResult.put(fsp.getMobile(), fsp);
+            }
+
+        }catch (InterruptedException e) {
+
+            e.printStackTrace();
+            throw new ApiException("服务器异常...", e);
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+            throw new ApiException("服务器异常...");
+        }
+
+        return finalResult;
+    }
+
+    private Callable<FlowSetProfile> queryTask(final String mobile, final String month){
+
+        Callable task = new Callable() {
+
+            public Object call() throws Exception {
+
+                List<FlowSet> flowSet = queryFlowSet(mobile, month);
+
+                FlowSetProfile result = new FlowSetProfile();
+
+                Double totalF = 0d;
+                Double monthF = 0d;
+                if(!flowSet.isEmpty()){
+                    for(SubAccuInfo each : flowSet.get(0).getSubAccuInfoList()){
+                        double f = Double.parseDouble(each.getAccuAmount());
+                        totalF += f;
+                        String subMonth = each.getStartTime().substring(0, 6);
+                        if(month.equals(subMonth)){
+                            monthF = f;
+                        }
+                    }
+                }
+
+                result.setMobile(mobile);
+                result.setMonth(month);
+                result.setMonthTrafficLeft(monthF);
+                result.setTotalTrafficLeft(totalF);
+
+                return result;
+            }
+        };
+        return task;
     }
 }
