@@ -20,14 +20,14 @@ import java.util.concurrent.*;
 @Service
 public class ApiService {
 
-    private final String SuccCode = "0000";
-    private final ExecutorService fixedThreadPool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-
     @Autowired
     ExchangeService exchange;
 
+    private final String SuccCode = "0000";
+    private final ExecutorService fixedThreadPool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+
     /**
-     * 查询手机号余额
+     * 查询手机号余额, 网关接口有限速,一秒钟超过10次查询则会异常
      *
      * @param mobile    查询的手机号码
      * @param queryType 查询类型
@@ -66,7 +66,7 @@ public class ApiService {
     }
 
     /**
-     * 查询手机流量套餐
+     * 查询手机流量套餐, 网关接口有限速,一秒钟超过10次查询则会异常
      *
      * @param mobile 手机号
      * @param month  查询月份
@@ -76,6 +76,7 @@ public class ApiService {
         List<FlowSet> result = new ArrayList<FlowSet>();
 
         month = month.replace("-", "");
+
         String xml = exchange.flowSet(mobile, month);
         System.out.println(mobile + " | " + month + " queryFlowSet resp: \n" + xml);
 
@@ -148,7 +149,7 @@ public class ApiService {
     }
 
     /**
-     * 查询手机充值记录
+     * 查询手机充值记录, 网关接口有限速,一秒钟超过10次查询则会异常
      *
      * @param mobile 手机号
      * @param month 查询月份
@@ -232,9 +233,9 @@ public class ApiService {
 
             for (int i = 0; i < mobileArr.length; i++) {
                 Future<FlowSetProfile> f =  completionService.take();
-                FlowSetProfile value = f.get();
 
-                FlowSetProfile fsp = new FlowSetProfile();
+                FlowSetProfile fsp = f.get();
+
                 finalResult.put(fsp.getMobile(), fsp);
             }
 

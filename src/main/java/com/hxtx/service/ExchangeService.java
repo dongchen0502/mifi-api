@@ -14,6 +14,7 @@ import java.rmi.RemoteException;
 import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 和网关实际交户的业务逻辑
@@ -21,26 +22,81 @@ import java.util.Map;
  */
 @Service
 public class ExchangeService {
+
     private String DstSysID = "6090010003";
     private String SrcOrgID = "609002";
     private String SrcSysID = "6090010002";
     private String DstOrgID = "609001";
+
     private static SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
     private static SimpleDateFormat sdf2 = new SimpleDateFormat("yyyyMMddHHmmss");
     private static SimpleDateFormat sdf3 = new SimpleDateFormat("yyyyMM");
-    private static SimpleDateFormat sdf4 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    private static SimpleDateFormat sdf4 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss,SSS");
     private static SimpleDateFormat sdf5 = new SimpleDateFormat("MMddHHmmss");
 
+    private static int reqInterval = 500;
+
+    private static final String TYPE_BALANCE = "SVC81001";
+    private static final String TYPE_FLOWSET = "SVC81003";
+    private static final String TYPE_PAYMENT = "SVC81006";
+
+    private static final String BUS_CODE = "BUS81000";
+
+    /**
+     * 保存上次调用接口的时间戳, 每种类型的接口每秒钟可访问10次
+     */
+    private Map<String, Long> speedController;
+
     IDEPService service = null;
-    Exchange exchange = null;
 
     public ExchangeService() {
         try {
             this.service = new IDEPServiceStub();
-            this.exchange = new Exchange();
+
+            speedController = new ConcurrentHashMap<String, Long>(3);
+            speedController.put(TYPE_BALANCE, System.currentTimeMillis());
+            speedController.put(TYPE_FLOWSET, System.currentTimeMillis());
+            speedController.put(TYPE_PAYMENT, System.currentTimeMillis());
+
         } catch (AxisFault axisFault) {
             axisFault.printStackTrace();
         }
+    }
+
+    private void waitIfNeeded(String queryType){
+        synchronized (queryType){
+            long waitMill = reqInterval - (System.currentTimeMillis() - speedController.get(queryType));
+            System.out.println(Thread.currentThread().getName() + " thread exchange " + queryType + " at " + sdf4.format(System.currentTimeMillis()) + " need wait : " + waitMill);
+            if(waitMill > 0){
+                try {
+                    Thread.sleep(waitMill);
+                } catch (InterruptedException e) {
+                }
+            }
+            speedController.put(queryType, System.currentTimeMillis());
+        }
+    }
+
+    /**
+     * 请求网关接口的一个封装, 由于每类型接口有限速(10 / 秒), 在这里做一个速度控制
+     * @param exchangeXML
+     * @param svc
+     * @return
+     */
+    private String exchangeWarp(String exchangeXML, String svc){
+        String result = "";
+        try {
+            Exchange exchange = new Exchange();
+            exchange.setIn0(exchangeXML);
+
+            waitIfNeeded(svc);
+            //阻塞操作, 将来改进为线程池
+            ExchangeResponse response = service.exchange(exchange);
+            result = response.getOut();
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
+        return result;
     }
 
     /**
@@ -96,80 +152,45 @@ public class ExchangeService {
      * @return 返回原生xml, 异常发生时,返回空串
      */
     public String balance(String mobile, int queryType) {
-        String result = "";
 
         Map<String, String> params = new HashMap<String, String>();
         params.put("CustMobile", mobile);
         params.put("QueryType", String.valueOf(queryType));
 
-        String exchangeXML = this.buildExchangeXML("BUS81000", "SVC81001", params);
+        String exchangeXML = this.buildExchangeXML(BUS_CODE, TYPE_BALANCE, params);
 
-        exchange.setIn0(exchangeXML);
-
-        try {
-            //阻塞操作, 将来改进为线程池
-            ExchangeResponse response = service.exchange(exchange);
-            result = response.getOut();
-        } catch (RemoteException e) {
-            e.printStackTrace();
-        }
-
-        return result;
+        return this.exchangeWarp(exchangeXML, TYPE_BALANCE);
     }
 
     /**
      * 查询流量套餐
      * @param mobile
      * @param month
-     * @return
+     * @return 返回原生xml, 异常发生时,返回空串
      */
     public String flowSet(String mobile, String month) {
-        String result = "";
 
         Map<String, String> params = new HashMap<String, String>();
         params.put("CustMobile", mobile);
         params.put("Month", month);
 
-        String exchangeXML = this.buildExchangeXML("BUS81000", "SVC81003", params);
-
-        exchange.setIn0(exchangeXML);
-
-        try {
-            //阻塞操作, 将来改进为线程池
-            ExchangeResponse response = service.exchange(exchange);
-            result = response.getOut();
-        } catch (RemoteException e) {
-            e.printStackTrace();
-        }
-
-        return result;
+        String exchangeXML = this.buildExchangeXML(BUS_CODE, TYPE_FLOWSET, params);
+        return this.exchangeWarp(exchangeXML, TYPE_FLOWSET);
     }
 
     /**
      * 查询交费历史
      * @param mobile
      * @param month
-     * @return
+     * @return 返回原生xml, 异常发生时,返回空串
      */
     public String chargeInfo(String mobile, String month){
-        String result = "";
 
         Map<String, String> params = new HashMap<String, String>();
         params.put("CustMobile", mobile);
         params.put("Month", month);
 
-        String exchangeXML = this.buildExchangeXML("BUS81000", "SVC81006", params);
-
-        exchange.setIn0(exchangeXML);
-
-        try {
-            //阻塞操作, 将来改进为线程池
-            ExchangeResponse response = service.exchange(exchange);
-            result = response.getOut();
-        } catch (RemoteException e) {
-            e.printStackTrace();
-        }
-
-        return result;
+        String exchangeXML = this.buildExchangeXML(BUS_CODE, TYPE_PAYMENT, params);
+        return this.exchangeWarp(exchangeXML, TYPE_PAYMENT);
     }
 }
