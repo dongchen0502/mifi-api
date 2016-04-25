@@ -2,8 +2,8 @@
 require(['jquery'],function($){
 
     $(function(){
-        require(['demoView'],function(demoView){
-            new demoView({pid : 'page-demo', el : $('.api-content')}).render();
+        require(['queryView'],function(queryView){
+            new queryView({pid : 'page-demo', el : $('.api-content')}).render();
         });
     });
 });

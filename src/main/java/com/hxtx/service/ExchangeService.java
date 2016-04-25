@@ -34,7 +34,7 @@ public class ExchangeService {
     private static SimpleDateFormat sdf4 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss,SSS");
     private static SimpleDateFormat sdf5 = new SimpleDateFormat("MMddHHmmss");
 
-    private static int reqInterval = 500;
+    private static int reqInterval = 50;
 
     private static final String TYPE_BALANCE = "SVC81001";
     private static final String TYPE_FLOWSET = "SVC81003";

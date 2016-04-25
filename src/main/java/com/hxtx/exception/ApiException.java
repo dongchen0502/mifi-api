@@ -6,11 +6,28 @@ package com.hxtx.exception;
  */
 public class ApiException extends RuntimeException{
 
+    private String errCode;
+    private String errMessage;
+
     public ApiException (String message) {
         super(message);
     }
 
+    public ApiException (String errCode, String errMessage){
+        super(errCode + ":" + errMessage);
+        this.errCode = errCode;
+        this.errMessage = errMessage;
+    }
+
     public ApiException(String message, Throwable cause) {
         super(message, cause);
+    }
+
+    public String getErrCode() {
+        return errCode;
+    }
+
+    public String getErrMessage() {
+        return errMessage;
     }
 }

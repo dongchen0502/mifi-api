@@ -24,7 +24,8 @@ public class ApiService {
     ExchangeService exchange;
 
     private final String SuccCode = "0000";
-    private final ExecutorService fixedThreadPool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+//    private final ExecutorService fixedThreadPool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+    private final ExecutorService fixedThreadPool = Executors.newFixedThreadPool(1);
 
     /**
      * 查询手机号余额, 网关接口有限速,一秒钟超过10次查询则会异常
@@ -140,7 +141,7 @@ public class ApiService {
                 }
             } else {
                 String rspDesc = TcpCont.element("Response").element("RspDesc").getText();
-                throw new ApiException(respCode + ":" + rspDesc);
+                throw new ApiException(respCode, rspDesc);
             }
         } catch (DocumentException e) {
             e.printStackTrace();
@@ -257,7 +258,24 @@ public class ApiService {
 
             public Object call() throws Exception {
 
-                List<FlowSet> flowSet = queryFlowSet(mobile, month);
+                int tryTimes = 0;
+                List<FlowSet> flowSet = new ArrayList<FlowSet>();
+
+                while(tryTimes < 3){
+
+                    try{
+                        tryTimes++;
+                        flowSet = queryFlowSet(mobile, month);
+                        break;
+                    }catch(ApiException e){
+                        if("1002".equals(e.getErrCode())){
+                            System.out.println(e.getMessage());
+                            Thread.sleep(1000);
+                        }else{
+                            throw e;
+                        }
+                    }
+                }
 
                 FlowSetProfile result = new FlowSetProfile();
 

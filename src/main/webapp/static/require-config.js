@@ -12,7 +12,7 @@ require.config({
         'ajaxUtil': 'lib/ajaxUtil',
         'fileUpload': 'lib/ajaxfileupload',
 
-        'demoView': 'module/demo/demoView'
+        'queryView': 'module/demo/demoView'
         // 'groupView':'module/groupView',
         // 'indexView':'module/indexView',
         // 'singleView':'module/singleView',
@@ -22,8 +22,8 @@ require.config({
         // 'bootstrap-table-zh-CN':'lib/bootstrap-table-zh-CN'
     },
     baseUrl: "/static",
-    // urlArgs: "v=" + "2016-03-25 18:36:27",
-    urlArgs: "v=" + new Date(),
+    urlArgs: "v=" + "2016-04-25 11:49:54",
+    // urlArgs: "v=" + new Date(),
 
     //这个配置是你在引入依赖的时候的包名
     shim: {
