@@ -24,21 +24,21 @@ public class ApiController extends BaseController{
     @RequestMapping(value = "/balance", method = {RequestMethod.GET})
     @ResponseBody
     public Object queryBalance(String mobile, int queryType) {
-        Balance balance = apiService.queryBalance(mobile, queryType);
+        Balance balance = apiService.queryBalance(mobile, queryType, false);
         return HttpResult.succResult(balance);
     }
 
     @RequestMapping(value = "/flowset", method = {RequestMethod.GET})
     @ResponseBody
     public Object queryFlowSet(String mobile, String month) {
-        List<FlowSet> flowSets = apiService.queryFlowSet(mobile, month);
+        List<FlowSet> flowSets = apiService.queryFlowSet(mobile, month, false);
         return HttpResult.succResult(flowSets);
     }
 
     @RequestMapping(value = "/chargeInfo", method = {RequestMethod.GET})
     @ResponseBody
     public Object queryChargeInfo(String mobile, String month){
-        List<PaymentRecordInfo> chargeInfo = apiService.queryChargeInfo(mobile, month);
+        List<PaymentRecordInfo> chargeInfo = apiService.queryChargeInfo(mobile, month, false);
         return HttpResult.succResult(chargeInfo);
     }
 
@@ -53,5 +53,30 @@ public class ApiController extends BaseController{
     public Object batchQueryFlowSet(String mobiles, String month) {
         Map<String, FlowSetProfile> flowSets = apiService.batchQueryFlowSet(mobiles, month);
         return HttpResult.succResult(flowSets);
+    }
+
+    /**
+     * 批量查询流量套餐接口
+     * @param mobiles 逗号分隔
+     * @param month 查询月份
+     * @return 每个号码对应月份的充值详情
+     */
+    @RequestMapping(value = "/chargeInfo", method = {RequestMethod.POST})
+    @ResponseBody
+    public Object batchQueryChargeInfo(String mobiles, String month){
+        Map<String, List<PaymentRecordInfo>> chargeInfos = apiService.batchQueryChangeInfo(mobiles, month);
+        return HttpResult.succResult(chargeInfos);
+    }
+
+    /**
+     * 添加一批新的号码到缓存,方便以后查询可以快速得到结果
+     * @param mobiles
+     * @return
+     */
+    @RequestMapping(value = "/mobiles/add", method = {RequestMethod.POST})
+    @ResponseBody
+    public Object addCacheMobiles(String mobiles){
+        apiService.addCacheMobiles(mobiles);
+        return HttpResult.succResult("ok");
     }
 }

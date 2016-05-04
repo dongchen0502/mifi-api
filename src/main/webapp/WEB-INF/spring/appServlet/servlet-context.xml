@@ -36,11 +36,6 @@
 
     <bean id="utf8charset" class="sun.nio.cs.UTF_8"/>
 
-    <context:component-scan base-package="com.hxtx.service">
-        <context:include-filter type="annotation"
-                                expression="org.springframework.stereotype.Service"/>
-    </context:component-scan>
-
     <context:annotation-config/>
 
     <!-- static resources -->

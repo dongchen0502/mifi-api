@@ -10,6 +10,13 @@
     <param-value>/WEB-INF/spring/root-context.xml</param-value>
   </context-param>
 
+  <listener>
+    <listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
+  </listener>
+  <listener>
+    <listener-class>com.hxtx.listener.CacheManager</listener-class>
+  </listener>
+
   <!--Processes application requests-->
   <servlet>
     <servlet-name>appServlet</servlet-name>

@@ -2,6 +2,7 @@ package com.hxtx.service;
 
 import com.hxtx.entity.*;
 import com.hxtx.exception.ApiException;
+import com.hxtx.listener.CacheCenter;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.DocumentHelper;
@@ -24,22 +25,76 @@ public class ApiService {
     ExchangeService exchange;
 
     private final String SuccCode = "0000";
-//    private final ExecutorService fixedThreadPool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+
     private final ExecutorService fixedThreadPool = Executors.newFixedThreadPool(1);
 
+    private final int TYPE_BALANCE = 1;
+    private final int TYPE_FLOWSET = 2;
+    private final int TYPE_PAYMENT = 3;
+
+    private String queryFromCache(int type, String mobile, String month){
+        if(!CacheCenter.resultMap.containsKey(mobile)){
+            return "";
+        }
+
+        CacheResult cacheResult = CacheCenter.resultMap.get(mobile);
+        switch (type){
+            case TYPE_BALANCE : {
+                return cacheResult.getBalance();
+            }
+            case TYPE_FLOWSET : {
+                return cacheResult.getFlowsetByMonth(month);
+            }
+            case TYPE_PAYMENT : {
+                return cacheResult.getPaymentByMonth(month);
+            }
+            default: return "";
+        }
+    }
+    private void updateCache(int type, String mobile, String month, String result){
+        if(!CacheCenter.resultMap.containsKey(mobile)){
+            CacheCenter.resultMap.put(mobile, new CacheResult());
+        }
+
+        CacheResult cacheResult = CacheCenter.resultMap.get(mobile);
+
+        switch (type){
+            case TYPE_BALANCE : {
+                cacheResult.setBalance(result);
+                break;
+            }
+            case TYPE_FLOWSET : {
+                cacheResult.setFlowset(month, result);
+                break;
+            }
+            case TYPE_PAYMENT : {
+                cacheResult.setPayment(month, result);
+                break;
+            }
+        }
+        //单类缓存信息更新不触发缓存时间更新
+//        timeMap.put(mobile, System.currentMillions());
+    }
     /**
-     * 查询手机号余额, 网关接口有限速,一秒钟超过10次查询则会异常
+     * 查询手机号余额, 网关接口有限速,10秒钟超过10次查询则会异常
      *
      * @param mobile    查询的手机号码
      * @param queryType 查询类型
      * @return Balance
      */
-    public Balance queryBalance(String mobile, int queryType) {
+    public Balance queryBalance(String mobile, int queryType, boolean useCache) {
         Balance result = null;
 
-        String xml = exchange.balance(mobile, queryType);
+        String xml = "";
+        if(useCache){
+            xml = this.queryFromCache(TYPE_BALANCE, mobile, null);
+        }
+        if(StringUtils.isEmpty(xml)){
+            xml = exchange.balance(mobile, queryType);
+        }
 
         if (StringUtils.isEmpty(xml)) {
+            this.updateCache(TYPE_BALANCE, mobile, null, xml);
             return result;
         }
 
@@ -73,15 +128,22 @@ public class ApiService {
      * @param month  查询月份
      * @return FlowSet or null on unexpected exception
      */
-    public List<FlowSet> queryFlowSet(String mobile, String month) {
+    public List<FlowSet> queryFlowSet(String mobile, String month, boolean useCache) {
         List<FlowSet> result = new ArrayList<FlowSet>();
 
         month = month.replace("-", "");
 
-        String xml = exchange.flowSet(mobile, month);
+        String xml = "";
+        if(useCache){
+            xml = this.queryFromCache(TYPE_FLOWSET, mobile, month);
+        }
+        if(StringUtils.isEmpty(xml)){
+            xml = exchange.flowSet(mobile, month);
+        }
         System.out.println(mobile + " | " + month + " queryFlowSet resp: \n" + xml);
 
         if (StringUtils.isEmpty(xml)) {
+            this.updateCache(TYPE_FLOWSET, mobile, month, xml);
             return result;
         }
 
@@ -156,14 +218,22 @@ public class ApiService {
      * @param month 查询月份
      * @return PaymentRecordInfo
      */
-    public List<PaymentRecordInfo> queryChargeInfo(String mobile, String month) {
+    public List<PaymentRecordInfo> queryChargeInfo(String mobile, String month, boolean useCache) {
         List<PaymentRecordInfo> result = new ArrayList<PaymentRecordInfo>();
 
         month = month.replace("-", "");
-        String xml = exchange.chargeInfo(mobile, month);
+
+        String xml = "";
+        if(useCache){
+            xml = this.queryFromCache(TYPE_PAYMENT, mobile, month);
+        }
+        if(StringUtils.isEmpty(xml)){
+            xml = exchange.chargeInfo(mobile, month);
+        }
         System.out.println(mobile + " | " + month + " queryChargeInfo resp: \n" + xml);
 
         if (StringUtils.isEmpty(xml)) {
+            this.updateCache(TYPE_PAYMENT, mobile, month, xml);
             return result;
         }
 
@@ -197,7 +267,7 @@ public class ApiService {
                 }
             } else {
                 String rspDesc = TcpCont.element("Response").element("RspDesc").getText();
-                throw new ApiException(respCode + ":" + rspDesc);
+                throw new ApiException(respCode, rspDesc);
             }
         } catch (DocumentException e) {
             e.printStackTrace();
@@ -227,7 +297,7 @@ public class ApiService {
 
         CompletionService<FlowSetProfile> completionService = new ExecutorCompletionService<FlowSetProfile>(fixedThreadPool);
         for(String mobile : mobileArr){
-            completionService.submit(queryTask(mobile, month));
+            completionService.submit(queryFlowTask(mobile, month));
         }
 
         try {
@@ -252,7 +322,7 @@ public class ApiService {
         return finalResult;
     }
 
-    private Callable<FlowSetProfile> queryTask(final String mobile, final String month){
+    private Callable<FlowSetProfile> queryFlowTask(final String mobile, final String month){
 
         Callable task = new Callable() {
 
@@ -265,12 +335,12 @@ public class ApiService {
 
                     try{
                         tryTimes++;
-                        flowSet = queryFlowSet(mobile, month);
+                        flowSet = queryFlowSet(mobile, month, true);
                         break;
                     }catch(ApiException e){
                         if("1002".equals(e.getErrCode())){
                             System.out.println(e.getMessage());
-                            Thread.sleep(1000);
+                            Thread.sleep(1000 * 10);
                         }else{
                             throw e;
                         }
@@ -301,5 +371,96 @@ public class ApiService {
             }
         };
         return task;
+    }
+
+    public Map<String, List<PaymentRecordInfo>> batchQueryChangeInfo(String mobiles, String month) {
+        if(mobiles == null){
+            throw new ApiException("批量查询错误 : 参数 mobiles = null");
+        }
+        if(month == null){
+            throw new ApiException("批量查询错误 : 参数 month = null");
+        }
+
+        String[] mobileArr = mobiles.split(",");
+        month = month.replace("-", "");
+        Map<String, List<PaymentRecordInfo>> finalResult = new HashMap<String, List<PaymentRecordInfo>>(mobileArr.length);
+
+        CompletionService<Map<String, List<PaymentRecordInfo>>> completionService = new ExecutorCompletionService<Map<String, List<PaymentRecordInfo>>>(fixedThreadPool);
+        for(String mobile : mobileArr){
+            completionService.submit(queryPaymentTask(mobile, month));
+        }
+
+        try {
+            for (int i = 0; i < mobileArr.length; i++) {
+                Future<Map<String, List<PaymentRecordInfo>>> f =  completionService.take();
+
+                Map<String, List<PaymentRecordInfo>> chargeInfo = f.get();
+
+                finalResult.putAll(chargeInfo);
+            }
+
+        }catch (InterruptedException e) {
+            e.printStackTrace();
+            throw new ApiException("服务器异常...", e);
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+            throw new ApiException("服务器异常...");
+        }
+
+        return finalResult;
+    }
+
+    private Callable<Map<String, List<PaymentRecordInfo>>> queryPaymentTask(final String mobile, final String month){
+
+        Callable task = new Callable() {
+
+            public Object call() throws Exception {
+
+                int tryTimes = 0;
+                Map<String, List<PaymentRecordInfo>> result = new HashMap<String, List<PaymentRecordInfo>>();
+                List<PaymentRecordInfo> value = new ArrayList<PaymentRecordInfo>();
+
+                while(tryTimes < 3){
+
+                    try{
+                        tryTimes++;
+                        value = queryChargeInfo(mobile, month, true);
+                        break;
+                    }catch(ApiException e){
+                        if("1002".equals(e.getErrCode())){
+                            System.out.println(e.getMessage());
+                            Thread.sleep(1000 * 10);
+                        }else{
+                            throw e;
+                        }
+                    }
+                }
+
+                result.put(mobile, value);
+                return result;
+            }
+        };
+        return task;
+    }
+
+    /**
+     * 添加新号码到缓存中
+     * @param mobiles
+     */
+    public void addCacheMobiles(String mobiles) {
+        if(mobiles == null){
+            throw new ApiException("批量查询错误 : 参数 mobiles = null");
+        }
+        String[] mobileArr = mobiles.split(",");
+        Map<String, CacheResult> newCache = new HashMap<String, CacheResult>();
+
+        for(String mobile : mobileArr){
+            if(CacheCenter.resultMap.containsKey(mobile)){
+                continue;
+            }
+            newCache.put(mobile, new CacheResult());
+        }
+        newCache.putAll(CacheCenter.resultMap);
+        CacheCenter.resultMap = newCache;
     }
 }
