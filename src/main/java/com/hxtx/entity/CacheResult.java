@@ -33,7 +33,7 @@ public class CacheResult implements Serializable{
     }
 
     public void setPayment(String month, String result){
-        flowset.put(month, result);
+        payment.put(month, result);
     }
 
     public String getBalance() {

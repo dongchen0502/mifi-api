@@ -2,6 +2,7 @@ package com.hxtx.listener;
 
 import com.hxtx.entity.CacheResult;
 import com.hxtx.service.ExchangeService;
+import com.rits.cloning.Cloner;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -36,6 +37,8 @@ public class CacheManageTask implements Runnable {
         while (keepOnRunning){
             int counter = 0;
             Set<String> mobiles = CacheCenter.resultMap.keySet();
+            Cloner cloner = new Cloner();
+            mobiles = cloner.deepClone(mobiles);
 
             innerFor:
             for(String key : mobiles){

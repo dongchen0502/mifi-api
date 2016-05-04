@@ -94,8 +94,9 @@ public class ApiService {
         }
 
         if (StringUtils.isEmpty(xml)) {
-            this.updateCache(TYPE_BALANCE, mobile, null, xml);
             return result;
+        }else{
+            this.updateCache(TYPE_BALANCE, mobile, null, xml);
         }
 
         try {
@@ -143,8 +144,9 @@ public class ApiService {
         System.out.println(mobile + " | " + month + " queryFlowSet resp: \n" + xml);
 
         if (StringUtils.isEmpty(xml)) {
-            this.updateCache(TYPE_FLOWSET, mobile, month, xml);
             return result;
+        }else{
+            this.updateCache(TYPE_FLOWSET, mobile, month, xml);
         }
 
         try {
@@ -233,8 +235,9 @@ public class ApiService {
         System.out.println(mobile + " | " + month + " queryChargeInfo resp: \n" + xml);
 
         if (StringUtils.isEmpty(xml)) {
-            this.updateCache(TYPE_PAYMENT, mobile, month, xml);
             return result;
+        }else{
+            this.updateCache(TYPE_PAYMENT, mobile, month, xml);
         }
 
         try {
