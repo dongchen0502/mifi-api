@@ -9,6 +9,15 @@
     <name>mifi-api</name>
     <url>http://maven.apache.org</url>
 
+    <properties>
+        <jdk.version>1.7</jdk.version>
+        <spring.version>4.1.6.RELEASE</spring.version>
+        <logback.version>1.1.3</logback.version>
+        <jcl.slf4j.version>1.7.12</jcl.slf4j.version>
+        <axis2.version>1.7.1</axis2.version>
+    </properties>
+
+
     <dependencies>
         <dependency>
             <groupId>junit</groupId>
@@ -20,23 +29,23 @@
         <dependency>
             <groupId>org.apache.axis2</groupId>
             <artifactId>axis2-kernel</artifactId>
-            <version>1.7.1</version>
+            <version>${axis2.version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.apache.axis2</groupId>
             <artifactId>axis2-adb</artifactId>
-            <version>1.7.1</version>
+            <version>${axis2.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.axis2</groupId>
             <artifactId>axis2-transport-local</artifactId>
-            <version>1.7.1</version>
+            <version>${axis2.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.axis2</groupId>
             <artifactId>axis2-transport-http</artifactId>
-            <version>1.7.1</version>
+            <version>${axis2.version}</version>
         </dependency>
         <dependency>
             <groupId>dom4j</groupId>
@@ -65,17 +74,41 @@
             <version>1.9.2</version>
         </dependency>
 
-
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-core</artifactId>
+            <version>${spring.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>commons-logging</groupId>
+                    <artifactId>commons-logging</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-webmvc</artifactId>
-            <version>4.1.0.RELEASE</version>
+            <version>${spring.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-context-support</artifactId>
-            <version>3.1.3.RELEASE</version>
+            <version>${spring.version}</version>
         </dependency>
+        <!-- 2. Bridge logging from JCL to SLF4j-->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>jcl-over-slf4j</artifactId>
+            <version>${jcl.slf4j.version}</version>
+        </dependency>
+
+        <!-- 3. logback -->
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>${logback.version}</version>
+        </dependency>
+
         <dependency>
             <groupId>javax.servlet</groupId>
             <artifactId>servlet-api</artifactId>

@@ -7,6 +7,8 @@ import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -20,7 +22,7 @@ import java.util.concurrent.*;
  */
 @Service
 public class ApiService {
-
+    private Logger logger = LoggerFactory.getLogger(ApiService.class);
     @Autowired
     ExchangeService exchange;
 
@@ -105,6 +107,8 @@ public class ApiService {
             Element TcpCont = root.element("TcpCont");
             String respCode = TcpCont.element("Response").element("RspCode").getText();
 
+            logger.info(mobile + " | " + queryType + " querybalance resp: \n" + respCode);
+
             if (SuccCode.equals(respCode)) {
                 Element qryInfoRsp = root.element("SvcCont").element("QryInfoRsp");
                 String ba = qryInfoRsp.element("BalanceAmount").getText();
@@ -141,7 +145,6 @@ public class ApiService {
         if(StringUtils.isEmpty(xml)){
             xml = exchange.flowSet(mobile, month);
         }
-        System.out.println(mobile + " | " + month + " queryFlowSet resp: \n" + xml);
 
         if (StringUtils.isEmpty(xml)) {
             return result;
@@ -154,6 +157,8 @@ public class ApiService {
             Element root = doc.getRootElement();
             Element TcpCont = root.element("TcpCont");
             String respCode = TcpCont.element("Response").element("RspCode").getText();
+
+            logger.info(mobile + " | " + month + " queryFlowSet resp: \n" + respCode);
 
             if (SuccCode.equals(respCode)) {
                 Element qryInfoRsp = root.element("SvcCont").element("QryInfoRsp");
@@ -232,7 +237,6 @@ public class ApiService {
         if(StringUtils.isEmpty(xml)){
             xml = exchange.chargeInfo(mobile, month);
         }
-        System.out.println(mobile + " | " + month + " queryChargeInfo resp: \n" + xml);
 
         if (StringUtils.isEmpty(xml)) {
             return result;
@@ -245,6 +249,8 @@ public class ApiService {
             Element root = doc.getRootElement();
             Element TcpCont = root.element("TcpCont");
             String respCode = TcpCont.element("Response").element("RspCode").getText();
+
+            logger.info(mobile + " | " + month + " queryChargeInfo resp: \n" + respCode);
 
             if (SuccCode.equals(respCode)) {
                 Element qryInfoRsp = root.element("SvcCont").element("QryInfoRsp");

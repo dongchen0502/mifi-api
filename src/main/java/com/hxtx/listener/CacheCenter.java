@@ -1,6 +1,8 @@
 package com.hxtx.listener;
 
 import com.hxtx.entity.CacheResult;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.util.HashMap;
@@ -11,6 +13,8 @@ import java.util.Map;
  * Created by dongchen on 16/5/3.
  */
 public class CacheCenter {
+    private static Logger logger = LoggerFactory.getLogger(CacheCenter.class);
+
     private static String cacheFilePath = "./mobiles.cache";
     /**
      * 电话号码 = 上次查询时间
@@ -22,27 +26,31 @@ public class CacheCenter {
     public static Map<String, CacheResult> resultMap = new HashMap<String, CacheResult>();
 
     public static void init(){
-        System.out.println("cache init--------------------");
+        logger.info("-----------> cacheMap init start <-----------");
         try {
             ObjectInputStream ois = new ObjectInputStream(new FileInputStream(new File(cacheFilePath)));
             resultMap = (Map<String, CacheResult>)ois.readObject();
             timeMap = (Map<String, Long>)ois.readObject();
             ois.close();
+            logger.info("-----------> cacheMap init complated, resultMap.size() = " + resultMap.size()
+                    + "| timeMap.size() = " + timeMap.size() + "<-----------");
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error(e.getMessage(), e);
         } catch (ClassNotFoundException e) {
-            e.printStackTrace();
+            logger.error(e.getMessage(), e);
         }
     }
 
     public static void save() {
-        System.out.println("cache save--------------------");
+        logger.info("-----------> cacheMap save start <-----------");
         try {
             ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(cacheFilePath)));
             oos.writeObject(resultMap);
             oos.writeObject(timeMap);
             oos.flush();
             oos.close();
+            logger.info("-----------> cacheMap save complated, resultMap.size() = " + resultMap.size()
+                    + "| timeMap.size() = " + timeMap.size() + "<-----------");
         } catch (IOException e) {
             e.printStackTrace();
         }

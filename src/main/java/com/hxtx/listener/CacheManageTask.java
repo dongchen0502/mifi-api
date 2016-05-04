@@ -3,13 +3,11 @@ package com.hxtx.listener;
 import com.hxtx.entity.CacheResult;
 import com.hxtx.service.ExchangeService;
 import com.rits.cloning.Cloner;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectOutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Set;
 
@@ -19,6 +17,7 @@ import java.util.Set;
  */
 @Service
 public class CacheManageTask implements Runnable {
+    private Logger logger = LoggerFactory.getLogger(CacheManageTask.class);
     @Autowired
     private ExchangeService exchange;
 
@@ -69,7 +68,7 @@ public class CacheManageTask implements Runnable {
                 }
             }
             if(counter > 0){
-                System.out.println("------------->完成一轮更新, 更新数量:" + counter);
+                logger.info("------------->完成一轮更新, 更新数量:" + counter);
                 CacheCenter.save();
             }
 

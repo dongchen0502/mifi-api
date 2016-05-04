@@ -8,6 +8,8 @@ import org.apache.axis2.AxisFault;
 import org.dom4j.Document;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.rmi.RemoteException;
@@ -22,6 +24,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 @Service
 public class ExchangeService {
+    private Logger logger = LoggerFactory.getLogger(ExchangeService.class);
 
     private String DstSysID = "6090010003";
     private String SrcOrgID = "609002";
@@ -66,7 +69,7 @@ public class ExchangeService {
     private void waitIfNeeded(String queryType){
         synchronized (queryType){
             long waitMill = reqInterval - (System.currentTimeMillis() - speedController.get(queryType));
-            System.out.println(Thread.currentThread().getName() + " thread exchange " + queryType + " at " + sdf4.format(System.currentTimeMillis()) + " need wait : " + waitMill);
+            logger.info(Thread.currentThread().getName() + " thread exchange " + queryType + " need wait : " + waitMill);
             if(waitMill > 0){
                 try {
                     Thread.sleep(waitMill);
@@ -93,6 +96,7 @@ public class ExchangeService {
             //阻塞操作, 将来改进为线程池
             ExchangeResponse response = service.exchange(exchange);
             result = response.getOut();
+            logger.debug(svc + ":" + result);
         } catch (RemoteException e) {
             e.printStackTrace();
         }
