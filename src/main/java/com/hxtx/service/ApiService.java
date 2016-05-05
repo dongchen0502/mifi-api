@@ -107,7 +107,7 @@ public class ApiService {
             Element TcpCont = root.element("TcpCont");
             String respCode = TcpCont.element("Response").element("RspCode").getText();
 
-            logger.info(mobile + " | " + queryType + " querybalance resp: \n" + respCode);
+            logger.info(mobile + " | " + queryType + " querybalance resp: " + respCode);
 
             if (SuccCode.equals(respCode)) {
                 Element qryInfoRsp = root.element("SvcCont").element("QryInfoRsp");
@@ -158,7 +158,7 @@ public class ApiService {
             Element TcpCont = root.element("TcpCont");
             String respCode = TcpCont.element("Response").element("RspCode").getText();
 
-            logger.info(mobile + " | " + month + " queryFlowSet resp: \n" + respCode);
+            logger.info(mobile + " | " + month + " queryFlowSet resp: " + respCode);
 
             if (SuccCode.equals(respCode)) {
                 Element qryInfoRsp = root.element("SvcCont").element("QryInfoRsp");
@@ -250,7 +250,7 @@ public class ApiService {
             Element TcpCont = root.element("TcpCont");
             String respCode = TcpCont.element("Response").element("RspCode").getText();
 
-            logger.info(mobile + " | " + month + " queryChargeInfo resp: \n" + respCode);
+            logger.info(mobile + " | " + month + " queryChargeInfo resp: " + respCode);
 
             if (SuccCode.equals(respCode)) {
                 Element qryInfoRsp = root.element("SvcCont").element("QryInfoRsp");
