@@ -1,6 +1,5 @@
 package com.hxtx.listener;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.support.WebApplicationContextUtils;
@@ -22,6 +21,7 @@ public class CacheManager implements ServletContextListener {
         Thread workerThread = new Thread(cacheManagerTask);
         //守护线程可以在tomcat关闭时自动结束
         workerThread.setDaemon(true);
+        workerThread.setName("thread-cacheManager");
         workerThread.start();
 
     }
