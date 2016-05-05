@@ -28,7 +28,8 @@ public class ApiService {
 
     private final String SuccCode = "0000";
 
-    private final ExecutorService fixedThreadPool = Executors.newFixedThreadPool(1);
+//    private final ExecutorService fixedThreadPool = Executors.newFixedThreadPool(1);
+    private final ExecutorService fixedThreadPool = new ThreadPoolExecutor(1, 1, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>(), new DaemonThreadFactory());
 
     private final int TYPE_BALANCE = 1;
     private final int TYPE_FLOWSET = 2;
@@ -97,8 +98,6 @@ public class ApiService {
 
         if (StringUtils.isEmpty(xml)) {
             return result;
-        }else{
-            this.updateCache(TYPE_BALANCE, mobile, null, xml);
         }
 
         try {
@@ -123,6 +122,7 @@ public class ApiService {
         } catch (DocumentException e) {
             e.printStackTrace();
         }
+        this.updateCache(TYPE_BALANCE, mobile, null, xml);
         return result;
     }
 
@@ -148,8 +148,6 @@ public class ApiService {
 
         if (StringUtils.isEmpty(xml)) {
             return result;
-        }else{
-            this.updateCache(TYPE_FLOWSET, mobile, month, xml);
         }
 
         try {
@@ -215,6 +213,7 @@ public class ApiService {
         } catch (DocumentException e) {
             e.printStackTrace();
         }
+        this.updateCache(TYPE_FLOWSET, mobile, month, xml);
         return result;
     }
 
@@ -240,8 +239,6 @@ public class ApiService {
 
         if (StringUtils.isEmpty(xml)) {
             return result;
-        }else{
-            this.updateCache(TYPE_PAYMENT, mobile, month, xml);
         }
 
         try {
@@ -281,6 +278,7 @@ public class ApiService {
         } catch (DocumentException e) {
             e.printStackTrace();
         }
+        this.updateCache(TYPE_PAYMENT, mobile, month, xml);
         return result;
 
     }

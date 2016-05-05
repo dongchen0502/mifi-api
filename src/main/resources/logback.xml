@@ -13,7 +13,7 @@
         <appender-ref ref="STDOUT" />
     </logger>
 
-    <logger name="com.hxtx" level="debug" additivity="false">
+    <logger name="com.hxtx" level="info" additivity="false">
         <appender-ref ref="STDOUT" />
     </logger>
 
