@@ -2,6 +2,7 @@ package com.hxtx.listener;
 
 import com.hxtx.entity.CacheResult;
 import com.hxtx.service.ExchangeService;
+import com.hxtx.utils.ExchangeUtils;
 import com.rits.cloning.Cloner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,22 +48,34 @@ public class CacheManageTask implements Runnable {
                     continue innerFor;
                 }
 
-                CacheResult cache = CacheCenter.resultMap.get(key);
                 String curMonth = sdf.format(curTime);
+                boolean complated = true;
                 try{
                     //完成一次更新
                     String balance = exchange.balance(key, 0);
-                    cache.setBalance(balance);
+                    String code = ExchangeUtils.parseCode(balance);
+                    logger.info("update cache : mobile = " + key + " | type = balance | code : " + code);
+                    complated &= ExchangeUtils.isSuccCode(code);
 
                     String flowset = exchange.flowSet(key, curMonth);
-                    cache.setFlowset(curMonth, flowset);
+                    code = ExchangeUtils.parseCode(flowset);
+                    logger.info("update cache : mobile = " + key + " | type = flowset | code : " + code);
+                    complated &= ExchangeUtils.isSuccCode(code);
 
                     String payment = exchange.chargeInfo(key, curMonth);
-                    cache.setPayment(curMonth, payment);
+                    code = ExchangeUtils.parseCode(payment);
+                    logger.info("update cache : mobile = " + key + " | type = payment | code : " + code);
+                    complated &= ExchangeUtils.isSuccCode(code);
 
                     //一轮完成后更新时间
-                    CacheCenter.timeMap.put(key, System.currentTimeMillis());
-                    counter++;
+                    if(complated){
+                        CacheResult cache = CacheCenter.resultMap.get(key);
+                        cache.setBalance(balance);
+                        cache.setFlowset(curMonth, flowset);
+                        cache.setPayment(curMonth, payment);
+                        CacheCenter.timeMap.put(key, System.currentTimeMillis());
+                        counter++;
+                    }
                 }catch (Exception e){
                     e.printStackTrace();
                 }

@@ -129,6 +129,6 @@
         </dependency>
     </dependencies>
     <build>
-        <finalName>com.hxtx.api</finalName>
+        <finalName>ROOT</finalName>
     </build>
 </project>

@@ -3,6 +3,7 @@ package com.hxtx.service;
 import com.hxtx.entity.*;
 import com.hxtx.exception.ApiException;
 import com.hxtx.listener.CacheCenter;
+import com.hxtx.utils.ExchangeUtils;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.DocumentHelper;
@@ -41,18 +42,22 @@ public class ApiService {
         }
 
         CacheResult cacheResult = CacheCenter.resultMap.get(mobile);
+        String result = "";
         switch (type){
             case TYPE_BALANCE : {
-                return cacheResult.getBalance();
+                result = cacheResult.getBalance();
+                break;
             }
             case TYPE_FLOWSET : {
-                return cacheResult.getFlowsetByMonth(month);
+                result = cacheResult.getFlowsetByMonth(month);
+                break;
             }
             case TYPE_PAYMENT : {
-                return cacheResult.getPaymentByMonth(month);
+                result = cacheResult.getPaymentByMonth(month);
+                break;
             }
-            default: return "";
         }
+        return ExchangeUtils.isSuccResp(result) ? result : "";
     }
     private void updateCache(int type, String mobile, String month, String result){
         if(!CacheCenter.resultMap.containsKey(mobile)){

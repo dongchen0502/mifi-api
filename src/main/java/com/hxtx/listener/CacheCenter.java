@@ -16,6 +16,8 @@ public class CacheCenter {
     private static Logger logger = LoggerFactory.getLogger(CacheCenter.class);
 
     private static String cacheFilePath = "./mobiles.cache";
+    private static String tmpCacheFilePath = "./mobiles.cache.tmp";
+    private static String bakCacheFilePath = "./mobiles.cache.bak";
     /**
      * 电话号码 = 上次查询时间
      */
@@ -44,11 +46,18 @@ public class CacheCenter {
     public static void save() {
         logger.info("-----------> cacheMap save start <-----------");
         try {
-            ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(cacheFilePath)));
+            File newFile = new File(tmpCacheFilePath);
+            File bakFile = new File(bakCacheFilePath);
+            File cacheFile = new File(cacheFilePath);
+
+            ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(newFile));
             oos.writeObject(resultMap);
             oos.writeObject(timeMap);
             oos.flush();
             oos.close();
+
+            cacheFile.renameTo(bakFile);
+            newFile.renameTo(cacheFile);
             logger.info("-----------> cacheMap save complated, resultMap.size() = " + resultMap.size()
                     + "| timeMap.size() = " + timeMap.size() + "<-----------");
         } catch (IOException e) {
