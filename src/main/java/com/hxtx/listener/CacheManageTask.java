@@ -25,6 +25,8 @@ public class CacheManageTask implements Runnable {
     private SimpleDateFormat sdf = new SimpleDateFormat("YYYYMM");
     private boolean keepOnRunning = true;
     private final int updateInterval = 1000 * 60 * 60;
+
+    private final String[] taskArr = {"payment", "flowset", "balance"};
     /**
      * 1.执行初始化缓存的操作
      * 2.循环执行查询操作,更新缓存
@@ -40,39 +42,58 @@ public class CacheManageTask implements Runnable {
             Cloner cloner = new Cloner();
             mobiles = cloner.deepClone(mobiles);
 
-            innerFor:
+            outerFor:
             for(String key : mobiles){
                 Long lastTime = CacheCenter.timeMap.get(key);
                 Long curTime = System.currentTimeMillis();
                 if(lastTime != null && (curTime - lastTime) < updateInterval){
-                    continue innerFor;
+                    continue outerFor;
                 }
 
-                String curMonth = sdf.format(curTime);
                 boolean complated = true;
+                CacheResult cache = CacheCenter.resultMap.get(key);
+                String curMonth = sdf.format(curTime);
+                String code;
+                String taskResult = "";
                 try{
                     //完成一次更新
-                    String balance = exchange.balance(key, 0);
-                    String code = ExchangeUtils.parseCode(balance);
-                    logger.info("update cache : mobile = " + key + " | type = balance | code : " + code);
-                    complated &= ExchangeUtils.isSuccCode(code);
+                    for(String taskName : taskArr){
+                        switch(taskName){
+                            case "payment" : {
+                                taskResult = exchange.chargeInfo(key, curMonth);break;
+                            }
+                            case "flowset" : {
+                                taskResult = exchange.flowSet(key, curMonth);break;
+                            }
+                            case "balance" : {
+                                taskResult = exchange.balance(key, 0); break;
+                            }
+                        }
+                        code = ExchangeUtils.parseCode(taskResult);
+                        logger.info("update cache : mobile = " + key + " | type = " + taskName + " | code : " + code);
+                        complated &= ExchangeUtils.isSuccCode(code);
+                        if(!complated){
+                            continue outerFor;
+                        }
 
-                    String flowset = exchange.flowSet(key, curMonth);
-                    code = ExchangeUtils.parseCode(flowset);
-                    logger.info("update cache : mobile = " + key + " | type = flowset | code : " + code);
-                    complated &= ExchangeUtils.isSuccCode(code);
-
-                    String payment = exchange.chargeInfo(key, curMonth);
-                    code = ExchangeUtils.parseCode(payment);
-                    logger.info("update cache : mobile = " + key + " | type = payment | code : " + code);
-                    complated &= ExchangeUtils.isSuccCode(code);
+                        switch(taskName){
+                            case "payment" : {
+                                cache.setPayment(curMonth, taskResult);
+                                break;
+                            }
+                            case "flowset" : {
+                                cache.setFlowset(curMonth, taskResult);
+                                break;
+                            }
+                            case "balance" : {
+                                cache.setBalance(taskResult);
+                                break;
+                            }
+                        }
+                    }
 
                     //一轮完成后更新时间
                     if(complated){
-                        CacheResult cache = CacheCenter.resultMap.get(key);
-                        cache.setBalance(balance);
-                        cache.setFlowset(curMonth, flowset);
-                        cache.setPayment(curMonth, payment);
                         CacheCenter.timeMap.put(key, System.currentTimeMillis());
                         counter++;
                     }
