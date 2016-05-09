@@ -24,7 +24,7 @@ public class CacheManageTask implements Runnable {
 
     private SimpleDateFormat sdf = new SimpleDateFormat("YYYYMM");
     private boolean keepOnRunning = true;
-    private final int updateInterval = 1000 * 60 * 60;
+    private final int updateInterval = 1000 * 60 * 60 * 12;
 
     private final String[] taskArr = {"payment", "flowset", "balance"};
     /**
@@ -35,11 +35,11 @@ public class CacheManageTask implements Runnable {
      */
     public void run() {
         CacheCenter.init();
+        Cloner cloner = new Cloner();
 
         while (keepOnRunning){
             int counter = 0;
             Set<String> mobiles = CacheCenter.resultMap.keySet();
-            Cloner cloner = new Cloner();
             mobiles = cloner.deepClone(mobiles);
 
             outerFor:
@@ -58,17 +58,9 @@ public class CacheManageTask implements Runnable {
                 try{
                     //完成一次更新
                     for(String taskName : taskArr){
-                        switch(taskName){
-                            case "payment" : {
-                                taskResult = exchange.chargeInfo(key, curMonth);break;
-                            }
-                            case "flowset" : {
-                                taskResult = exchange.flowSet(key, curMonth);break;
-                            }
-                            case "balance" : {
-                                taskResult = exchange.balance(key, 0); break;
-                            }
-                        }
+
+                        taskResult = exchangeHandler(taskName, key, curMonth);
+
                         code = ExchangeUtils.parseCode(taskResult);
                         logger.info("update cache : mobile = " + key + " | type = " + taskName + " | code : " + code);
                         complated &= ExchangeUtils.isSuccCode(code);
@@ -76,26 +68,16 @@ public class CacheManageTask implements Runnable {
                             continue outerFor;
                         }
 
-                        switch(taskName){
-                            case "payment" : {
-                                cache.setPayment(curMonth, taskResult);
-                                break;
-                            }
-                            case "flowset" : {
-                                cache.setFlowset(curMonth, taskResult);
-                                break;
-                            }
-                            case "balance" : {
-                                cache.setBalance(taskResult);
-                                break;
-                            }
-                        }
+                        resultHandler(taskName, cache, taskResult, curMonth);
                     }
 
                     //一轮完成后更新时间
                     if(complated){
                         CacheCenter.timeMap.put(key, System.currentTimeMillis());
                         counter++;
+                    }
+                    if(counter >= 10){
+                        break outerFor;
                     }
                 }catch (Exception e){
                     e.printStackTrace();
@@ -110,6 +92,39 @@ public class CacheManageTask implements Runnable {
                 Thread.sleep(5000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
+            }
+        }
+    }
+
+    private String exchangeHandler(String taskName, String mobile, String month){
+        String taskResult = "";
+        switch(taskName){
+            case "payment" : {
+                taskResult = exchange.chargeInfo(mobile, month);break;
+            }
+            case "flowset" : {
+                taskResult = exchange.flowSet(mobile, month);break;
+            }
+            case "balance" : {
+                taskResult = exchange.balance(mobile, 0); break;
+            }
+        }
+        return taskResult;
+    }
+
+    private void resultHandler(String taskName, CacheResult cache, String xml, String month){
+        switch(taskName){
+            case "payment" : {
+                cache.setPayment(month, xml);
+                break;
+            }
+            case "flowset" : {
+                cache.setFlowset(month, xml);
+                break;
+            }
+            case "balance" : {
+                cache.setBalance(xml);
+                break;
             }
         }
     }

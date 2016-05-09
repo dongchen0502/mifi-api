@@ -1,6 +1,8 @@
 package com.hxtx.listener;
 
 import com.hxtx.entity.CacheResult;
+import com.rits.cloning.Cloner;
+import org.apache.oro.util.Cache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,6 +20,7 @@ public class CacheCenter {
     private static String cacheFilePath = "./mobiles.cache";
     private static String tmpCacheFilePath = "./mobiles.cache.tmp";
     private static String bakCacheFilePath = "./mobiles.cache.bak";
+    private static Cloner cloner = new Cloner();
     /**
      * 电话号码 = 上次查询时间
      */
@@ -50,9 +53,12 @@ public class CacheCenter {
             File bakFile = new File(bakCacheFilePath);
             File cacheFile = new File(cacheFilePath);
 
+            Map<String, CacheResult> rMap = cloner.deepClone(resultMap);
+            Map<String, Long> tMap = cloner.deepClone(timeMap);
+
             ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(newFile));
-            oos.writeObject(resultMap);
-            oos.writeObject(timeMap);
+            oos.writeObject(rMap);
+            oos.writeObject(tMap);
             oos.flush();
             oos.close();
 
